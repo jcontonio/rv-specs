@@ -1,0 +1,69 @@
+---
+import { getPopularFurnaces} from '../lib/pocketbase'
+
+const popularFurnaces = await getPopularFurnaces()
+
+---
+
+<rv-search>
+  <form id="search">
+    <h2>Filter RVs</h2>
+    <label>By name <input type="text" name="name" /></label>
+    <label>
+      Furnace
+      <select name="furnace">
+        <option>---</option>
+        {popularFurnaces.items.map((furnace) => {
+          return <option value={furnace.id}>{furnace.brand} - {furnace.name}</option>
+        })}
+      </select>
+    </label>
+    <button>Find</button>
+  </form>
+
+  <div id="results">
+    <slot />
+  </div>
+</rv-search>
+
+<script>
+  class RVSearch extends HTMLElement {
+    searchForm: HTMLFormElement | null
+    resultsDiv: HTMLElement | null
+    constructor() {
+      super()
+      this.searchForm = this.querySelector('#search')
+      this.resultsDiv = this.querySelector('#results')
+    }
+    connectedCallback() {
+      this.searchForm?.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        try {
+          const formData = new FormData(this.searchForm!)
+          const urlParams: Record<string, string> = {}
+          for (let [key, value] of formData.entries()) {
+            urlParams[key] = value as string
+          }
+          const params = new URLSearchParams(urlParams)
+
+          // fetch a paginated records list
+          const resultList = await fetch(`/api/search?${params.toString()}`)
+          const data = await resultList.json()
+
+          console.log(data)
+
+          if (data.items.length > 0) {
+            this.resultsDiv!.innerHTML = '<p>Results!</p>'
+          } else {
+            this.resultsDiv!.innerHTML = '<p>No results!</p>'
+          }
+        } catch (e) {
+          this.resultsDiv!.innerHTML = `There was an error searching. Try again later.`
+          console.error(e)
+        }
+      })
+    }
+  }
+
+  customElements.define('rv-search', RVSearch)
+</script>

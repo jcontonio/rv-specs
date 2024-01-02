@@ -1,0 +1,23 @@
+---
+import { getModels } from '../lib/pocketbase'
+import Layout from '../layouts/Layout.astro'
+import Search from '../components/Search.astro'
+
+
+// fetch a paginated records list
+const resultList = await getModels()
+---
+
+<Layout title="Welcome to RV Specs">
+  <h1>RV Specs</h1>
+  <p>A collection of all current model RVs, searachable by the important hardware and specs.</p>
+  <p>Total models: {resultList.totalItems}</p>
+  <Search>
+    <ol>
+      {resultList.items.map((model) => {
+        return (<li>{model.name}</li>)
+      })}
+    </ol>
+  </Search>
+</Layout>
+
